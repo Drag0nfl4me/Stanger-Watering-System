@@ -1,3 +1,9 @@
+/******************************************************/
+//       THIS IS A GENERATED FILE - DO NOT EDIT       //
+/******************************************************/
+
+#include "Particle.h"
+#line 1 "c:/Users/cgame/Documents/IoT/Stanger-Watering-System/Stanger_Watering_System/src/Stanger_Watering_System.ino"
 /*
  * Project L11_04_SeeedSensors
  * Description: Smart Watering System that takes inspiration from Stranger Things. Uses neopixels to dynamicly dysplay the plants nees
@@ -24,6 +30,9 @@
 #include <Neopixel.h>
 
 /****************** Global State ******************/ 
+void setup();
+void loop();
+#line 27 "c:/Users/cgame/Documents/IoT/Stanger-Watering-System/Stanger_Watering_System/src/Stanger_Watering_System.ino"
 TCPClient TheClient;
 Adafruit_MQTT_SPARK mqtt(&TheClient,AIO_SERVER,AIO_SERVERPORT,AIO_USERNAME,AIO_KEY); 
 
