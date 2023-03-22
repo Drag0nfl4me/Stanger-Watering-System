@@ -127,6 +127,9 @@ void setup() {
     Serial.printf(".");
   }
 
+  // Setup MQTT subscription
+  mqtt.subscribe(&sub_buttonOnOff);
+
   // Pins
   pinMode(DUSTPIN,INPUT);
   pinMode(MOISTUREPIN,INPUT);
@@ -179,19 +182,6 @@ void loop() {
   MQTT_ping();
   display.clearDisplay();
   buttonOnOff = digitalRead(D2);
-  /*********************** Subscriptions ***********************/
-  Adafruit_MQTT_Subscribe *subscription;
-  while ((subscription = mqtt.readSubscription(100))) {
-    if (subscription == &sub_buttonOnOff) {
-      subButtonOnOff = atof((char *)sub_buttonOnOff.lastread);
-    }
-  }
-  if (subButtonOnOff) {
-    currentPlantPos = 3;
-    digitalWrite(D3,HIGH);
-    delay(500);
-    digitalWrite(D3,LOW);
-  }
 
   // Resets the plants position to the meditation room with an 90% chance, otherwise set to kitchen.
   randomRoom = random(1,100);
@@ -261,15 +251,25 @@ void loop() {
 
   /******************** Moisture Sensor ********************/
   moisture = analogRead(MOISTUREPIN);
-  Serial.printf("\nMoisture value = %f",moisture);
+  Serial.printf("\nMoisture value = %i",moisture);
   // Moves plant position to bathroom if it gets to dry
   if (millis()-moistureTime > 10000) {
-    if (moisture > 2800 || buttonOnOff) {
+    if (moisture > 2800 || buttonOnOff || subButtonOnOff) {
       currentPlantPos = 3;
       digitalWrite(D3,HIGH);
       delay(500);
       digitalWrite(D3,LOW);
       moistureTime = millis();
+      subButtonOnOff = 0;
+      buttonOnOff = 0;
+    }
+  }
+
+  /*********************** Subscriptions ***********************/
+  Adafruit_MQTT_Subscribe *subscription;
+  while ((subscription = mqtt.readSubscription(100))) {
+    if (subscription == &sub_buttonOnOff) {
+      subButtonOnOff = atof((char *)sub_buttonOnOff.lastread);
     }
   }
 
@@ -277,14 +277,14 @@ void loop() {
   if((millis()-pubTime > 1500)) {
     pubNum++;
     if(mqtt.Update()) {
-      if (buttonOnOff) {pub_buttonOnOff.publish(buttonOnOff); Serial.printf("\nPublishing %0.2f \n",buttonOnOff);}
+      if (buttonOnOff) {pub_buttonOnOff.publish(buttonOnOff); Serial.printf("\nPublishing %i \n",buttonOnOff);}
       if (pubNum == 1) {pub_concentration.publish(concentration); Serial.printf("\nPublishing %0.2f \n",concentration);}
-      if (pubNum == 2) {pub_airQuality.publish(airValue); Serial.printf("\nPublishing %0.2f \n",airValue); }
-      if (pubNum == 3) {pub_tempF.publish(tempF); Serial.printf("\nPublishing %0.2f \n",tempF); }
-      if (pubNum == 4) {pub_pressure.publish(pressureinHG); Serial.printf("\nPublishing %0.2f \n",pressureinHG);}
-      if (pubNum == 5) {pub_humidity.publish(humidity); Serial.printf("\nPublishing %0.2f \n",humidity); } 
-      if (pubNum == 6) {pub_moisture.publish(moisture); Serial.printf("\nPublishing %0.2f \n",moisture);}
-      if (pubNum == 7) {pub_currentRoom.publish(currentPlantPos); Serial.printf("\nPublishing %0.2f \n",currentPlantPos);}
+      if (pubNum == 2) {pub_airQuality.publish(airValue); Serial.printf("\nPublishing %i \n",airValue); }
+      if (pubNum == 3) {pub_tempF.publish(tempF); Serial.printf("\nPublishing %i \n",tempF); }
+      if (pubNum == 4) {pub_pressure.publish(pressureinHG); Serial.printf("\nPublishing %i \n",pressureinHG);}
+      if (pubNum == 5) {pub_humidity.publish(humidity); Serial.printf("\nPublishing %i \n",humidity); } 
+      if (pubNum == 6) {pub_moisture.publish(moisture); Serial.printf("\nPublishing %i \n",moisture);}
+      if (pubNum == 7) {pub_currentRoom.publish(currentPlantPos); Serial.printf("\nPublishing %i \n",currentPlantPos);}
     }
     if (pubNum == 7) {
       pubNum = 0;
